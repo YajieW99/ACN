@@ -63,7 +63,7 @@ parser.add_argument('--num_classes', default=174, type=int,
                     help='num of class in the model')
 parser.add_argument('--num_boxes', default=4, type=int,
                     help='num of boxes for each image')
-parser.add_argument('--num_frames', default=4, type=int,
+parser.add_argument('--num_frames', default=16, type=int,
                     help='num of frames for the model')
 parser.add_argument('--dataset', default='smth_smth',
                     help='which dataset to train')
@@ -338,7 +338,7 @@ def validate(val_loader, model, criterion, longtailclass,
             if b in hand_index:
                 labelcur = video_label[b]
                 v_id = new_label[str(int(labelcur))]['verb_id']
-                p_id = new_label[str(int(labelcur))]['prep_id']
+                p_id = new_label[str(int(labelcur))]['prep_adv_id']
                 hand_vplist.append(torch.tensor([v_id, p_id]))
             else:
                 hand_vplist.append(torch.tensor([180, 180]))
