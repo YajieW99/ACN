@@ -264,7 +264,7 @@ def train(train_loader, model, optimizer, epoch, criterion, longtailclass,
             loss_ori = criterion(cls,label).cuda(device=device)
             loss_comp = loss_wvpcomp
 
-            loss = loss_ori + 0.6*loss_comp
+            loss = loss_ori + 0.2*loss_comp
             clsa = torch.cat((cls, feature_comp), dim=0)
             labela = torch.cat((label, complabel.long()), dim=0)
             acc1, acc5 = accuracy(clsa.cpu(), labela.cpu())
