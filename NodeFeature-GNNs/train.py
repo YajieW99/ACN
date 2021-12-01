@@ -58,7 +58,7 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
-parser.add_argument('--num_classes', default=16, type=int,
+parser.add_argument('--num_classes', default=174, type=int,
                     help='num of class in the model')
 parser.add_argument('--num_boxes', default=4, type=int,
                     help='num of boxes for each image')
