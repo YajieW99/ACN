@@ -205,9 +205,6 @@ def train(train_loader, model, optimizer, epoch, criterion, tb_logger=None):
     model.train()
     end = time.time()
 
-    neuweight = [3.9890, 3.9890, 3.5506, 3.5506, 3.2288, 3.2288, 2.9704, 2.9704, 2.7515, 2.5594, 2.3864, 2.4423, 2.3470,
-                 2.2600, 2.0369, 1.8545]
-
     for i, (global_img_tensors, box_tensors, box_categories, hand_id, video_label) in enumerate(train_loader):
         # print(video_label)
 
@@ -221,7 +218,6 @@ def train(train_loader, model, optimizer, epoch, criterion, tb_logger=None):
         # print(count30)
         cls = cls.view((-1, len(train_loader.dataset.classes)))
         device = cls.device
-        cls = cls*torch.tensor(neuweight).cuda()
         loss = criterion(cls, label).cuda(device=device)
 
         acc1, acc5 = accuracy(cls.cpu(), label.cpu())
@@ -275,8 +271,7 @@ def validate(val_loader, model, criterion, epoch=None, tb_logger=None):
     # isval = True
     model.eval()
     end = time.time()
-    neuweight = [3.9890, 3.9890, 3.5506, 3.5506, 3.2288, 3.2288, 2.9704, 2.9704, 2.7515, 2.5594, 2.3864, 2.4423, 2.3470,
-                 2.2600, 2.0369, 1.8545]
+  
     for i, (global_img_tensors, box_tensors, box_categories, hand_id, video_label) in enumerate(val_loader):
         # compute output
         # isval = True
@@ -286,7 +281,6 @@ def validate(val_loader, model, criterion, epoch=None, tb_logger=None):
         with torch.no_grad():
             cls, label = model(global_img_tensors, box_categories, box_tensors, hand_id, video_label_cuda)
             cls = cls.view((-1, len(val_loader.dataset.classes)))
-            cls = cls * torch.tensor(neuweight).cuda()
 
             # device = cls.device
             loss = criterion(cls, label)
