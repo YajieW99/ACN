@@ -238,7 +238,7 @@ def train(train_loader, model, optimizer, epoch, criterion, longtailclass,
             if b in hand_index:
                 labelcur = video_label[b]
                 v_id = new_label[str(int(labelcur))]['verb_id']
-                p_id = new_label[str(int(labelcur))]['prep_id']
+                p_id = new_label[str(int(labelcur))]['prep_adv_id']
                 hand_vplist.append(torch.tensor([v_id,p_id]))
             else:
                 hand_vplist.append(torch.tensor([180, 180]))
@@ -264,7 +264,7 @@ def train(train_loader, model, optimizer, epoch, criterion, longtailclass,
             loss_ori = criterion(cls,label).cuda(device=device)
             loss_comp = loss_wvpcomp
 
-            loss = loss_ori + 0.2*loss_comp
+            loss = loss_ori + 0.6*loss_comp
             clsa = torch.cat((cls, feature_comp), dim=0)
             labela = torch.cat((label, complabel.long()), dim=0)
             acc1, acc5 = accuracy(clsa.cpu(), labela.cpu())
