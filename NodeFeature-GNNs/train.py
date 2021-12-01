@@ -62,7 +62,7 @@ parser.add_argument('--num_classes', default=174, type=int,
                     help='num of class in the model')
 parser.add_argument('--num_boxes', default=4, type=int,
                     help='num of boxes for each image')
-parser.add_argument('--num_frames', default=4, type=int,
+parser.add_argument('--num_frames', default=16, type=int,
                     help='num of frames for the model')
 parser.add_argument('--dataset', default='smth_smth',
                     help='which dataset to train')
