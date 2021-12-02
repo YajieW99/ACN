@@ -1,4 +1,4 @@
-# ACN: Attentional  Compositional Networks for Long-Tailed Human Action Recognition
+# ACN: Attentional  Composition Networks for Long-Tailed Human Action Recognition
 
 ## The NEU-Interaction & Something-Else Annotations
 
