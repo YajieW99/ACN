@@ -133,25 +133,25 @@ class VideoModelCoord(nn.Module):
 
         self.W_v = nn.Parameter(torch.tensor(np.zeros([self.longtailclassnum, self.nr_actions]).astype(np.float32)),requires_grad=True)
         self.W_p = nn.Parameter(torch.tensor(np.zeros([self.longtailclassnum, self.nr_actions]).astype(np.float32)),requires_grad=True)
-        Wv = [[85,86,87,88,90,91,92,93],[131,132,133],[105],[109,111,112,113,114],[131,132,133],
+        self.Wv = [[85,86,87,88,90,91,92,93],[131,132,133],[105],[109,111,112,113,114],[131,132,133],
               [85,86,87,88,90,91,92,93],[109,111,112,113,114],[85,86,87,88,90,91,92,93],
               [23,24,25],[131,132,133],[11,16,17,18,45,79,80,148],[85,86,87,88,90,91,92,93],
               [12,14,157,158],[23,24,25],[0,34,37,41,42,47],[11,16,17,18,45,79,80,148],[53,54,55,56,57],
               [9,10,13,15],[30,31,35,44],[52,52,],[11,16,17,18,45,79,80,148],[109],[110],
               [62,63,64,65,66,67,68,69,127],[140,142],[141],[32],[14],[116],[85,86,87,88,90,91,92,93]]
 
-        Wp = [[87],[44,99,119,133,163],[6,105],[48,122,113,114,159],[43,47,100,109,117,131,161],
+        self.Wp = [[87],[44,99,119,133,163],[6,105],[48,122,113,114,159],[43,47,100,109,117,131,161],
               [91],[56,62,97,112,115,132,160],[92,88],[25],[56,62,97,112,115,132,160],[16,17,18],[93],
               [14],[24,130],[42],[11,12,13],[56,62,97,112,115,132,160],[15,155,157],[31],
               [51],[56,62,97,112,115,132,160],[109],[110],[11,16,17,22,40,56,62,75,132,160],[140,142],
               [141],[32],[14],[116],[92,88]]
 
-        for i in range(len(Wv)):
-            wvcurrent = Wv[i]
+        for i in range(len(self.Wv)):
+            wvcurrent = self.Wv[i]
             for j in wvcurrent:
                 nn.init.constant_(self.W_v[i][j], 1/len(wvcurrent))
-        for i in range(len(Wp)):
-            wpcurrent = Wp[i]
+        for i in range(len(self.Wp)):
+            wpcurrent = self.Wp[i]
             for j in wpcurrent:
                 nn.init.constant_(self.W_p[i][j], 1/len(wpcurrent))
 
@@ -232,18 +232,16 @@ class VideoModelCoord(nn.Module):
         x = torch.cat((x, x_skip), dim=-1)      # [N, E, T, D'=256]
         x = self.mlp4(x).reshape(N,E,T,-1).transpose(0,1).reshape(E, -1)         # [N, E, T, D]
 
-        edge_feature = x.tolist()
+        Dim = self.coord_feature_dim  #256
+        zeros = torch.zeros(1, N * T * Dim).cuda()  # [1, 49152]
+        edge_feature = torch.split(x, 4, dim=0)  
 
-        Dim = self.coord_feature_dim
-        zeros = [0] * N * T * Dim
-        edge_feature.insert(0, zeros)
-        edge_feature.insert(5, zeros)
-        edge_feature.insert(10, zeros)
-        edge_feature.insert(15, zeros)
+        edge_feature_0 = torch.cat((zeros, edge_feature[0]), dim=0) 
+        edge_feature_1 = torch.cat((zeros, edge_feature[1]), dim=0)
+        edge_feature_2 = torch.cat((zeros, edge_feature[2]), dim=0)
 
-        edge_feature = torch.tensor(edge_feature).cuda()
+        edge_feature = torch.cat((edge_feature_0, edge_feature_1, edge_feature_2, zeros), dim=0) # [16, 49512]
         edge_feature = edge_feature.reshape(4, 4, N, T, Dim).permute(2, 0, 1, 3, 4).reshape(N * 4, -1)
-        # edge_feature.shape[N*4, 4*T*D]
 
         edge_hand = []
         edge_nohand = []
@@ -525,34 +523,21 @@ class VideoModelCoord(nn.Module):
 
                 vpl = vpl_256 + vpl_128
 
-
-                Wv = [[85,86,87,88,90,91,92,93],[131,132,133],[105],[109,111,112,113,114],[131,132,133],
-                [85,86,87,88,90,91,92,93],[109,111,112,113,114],[85,86,87,88,90,91,92,93],
-                [23,24,25],[131,132,133],[11,16,17,18,45,79,80,148],[85,86,87,88,90,91,92,93],
-                [12,14,157,158],[23,24,25],[0,34,37,41,42,47],[11,16,17,18,45,79,80,148],[53,54,55,56,57],
-                [9,10,13,15],[30,31,35,44],[52,52,],[11,16,17,18,45,79,80,148],[109],[110],
-                [62,63,64,65,66,67,68,69,127],[140,142],[141],[32],[14],[116],[85,86,87,88,90,91,92,93]]
-                Wp = [[87],[44,99,119,133,163],[6,105],[48,122,113,114,159],[43,47,100,109,117,131,161],
-                [91],[56,62,97,112,115,132,160],[92,88],[25],[56,62,97,112,115,132,160],[16,17,18],[93],
-                [14],[24,130],[42],[11,12,13],[56,62,97,112,115,132,160],[15,155,157],[31],
-                [51],[56,62,97,112,115,132,160],[109],[110],[11,16,17,22,40,56,62,75,132,160],[140,142],
-                [141],[32],[14],[116],[92,88]]
-
                 W_v_new_rev = torch.zeros([self.longtailclassnum, self.nr_actions]).cuda()
                 W_p_new_rev = torch.zeros([self.longtailclassnum, self.nr_actions]).cuda()
                 
                 deno = 0
-                for i in range(len(Wv)):
+                for i in range(len(self.Wv)):
                     deno = 0
-                    wvcurrent = Wv[i]
+                    wvcurrent = self.Wv[i]
                     for j in wvcurrent:
                         deno = deno + abs(self.W_v[i][j])
                     W_v_new_rev[i] = abs(self.W_v[i])/deno
 
                 deno = 0
-                for i in range(len(Wp)):
+                for i in range(len(self.Wp)):
                     deno = 0
-                    wpcurrent = Wp[i]
+                    wpcurrent = self.Wp[i]
                     for j in wpcurrent:
                         deno = deno + abs(self.W_p[i][j])
                     W_p_new_rev[i] = abs(self.W_p[i])/deno
